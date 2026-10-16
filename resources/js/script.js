@@ -7,73 +7,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav-links a');
 
     navLinks.forEach((link) => {
-          link.addEventListener('click', () => {
-              navLinks.forEach((item) => item.classList.remove('active'));
-              link.classList.add('active');
-          });
+        link.addEventListener('click', () => {
+            navLinks.forEach((item) => item.classList.remove('active'));
+            link.classList.add('active');
+        });
     });
 
-  if (window.lucide) {
-            lucide.createIcons();
-        }
+    const popup = document.getElementById('authErrorPopup');
+    const closePopup = document.getElementById('closeAuthErrorPopup');
 
-        const popup = document.getElementById('authErrorPopup');
-        const closePopup = document.getElementById('closeAuthErrorPopup');
-
-        if (popup && closePopup) {
-            closePopup.addEventListener('click', () => {
-                popup.classList.remove('is-open');
-            });
-        }
+    if (popup && closePopup) {
+        closePopup.addEventListener('click', () => {
+            popup.classList.remove('is-open');
+        });
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && popup) {
+            if (event.key === 'Escape') {
                 popup.classList.remove('is-open');
             }
         });
+    }
 
-        const loginPanel = document.getElementById('loginPanel');
-        const registerPanel = document.getElementById('registerPanel');
-        const forgotPanel = document.getElementById('forgotPanel');
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
+    const forgotPanel = document.getElementById('forgotPanel');
 
-        function showPanel(panel) {
-            [loginPanel, registerPanel, forgotPanel].forEach((item) => {
-                item.classList.add('auth-card-hidden');
-            });
+    function showPanel(panel) {
+        if (!panel) return;
 
-            panel.classList.remove('auth-card-hidden');
+        [loginPanel, registerPanel, forgotPanel].forEach((item) => {
+            item?.classList.add('auth-card-hidden');
+        });
 
-            if (window.lucide) {
-                lucide.createIcons();
-            }
+        panel.classList.remove('auth-card-hidden');
+
+        if (window.lucide) {
+            window.lucide.createIcons();
         }
+    }
 
-        document.getElementById('showRegister')?.addEventListener('click', (event) => {
-            event.preventDefault();
-            showPanel(registerPanel);
-        });
+    document.getElementById('showRegister')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPanel(registerPanel);
+    });
 
-        document.getElementById('showLogin')?.addEventListener('click', (event) => {
-            event.preventDefault();
-            showPanel(loginPanel);
-        });
+    document.getElementById('showLogin')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPanel(loginPanel);
+    });
 
-        document.getElementById('showLoginText')?.addEventListener('click', (event) => {
-            event.preventDefault();
-            showPanel(loginPanel);
-        });
+    document.getElementById('showLoginText')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPanel(loginPanel);
+    });
 
-        document.getElementById('showForgot')?.addEventListener('click', (event) => {
-            event.preventDefault();
-            showPanel(forgotPanel);
-        });
+    document.getElementById('showForgot')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPanel(forgotPanel);
+    });
 
-        document.getElementById('showLoginFromForgot')?.addEventListener('click', (event) => {
-            event.preventDefault();
-            showPanel(loginPanel);
-        });
+    document.getElementById('showLoginFromForgot')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPanel(loginPanel);
+    });
 
-    
     const dashboardData = window.wandeeDashboardData;
 
     if (dashboardData && window.Chart) {
@@ -154,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchInput = document.querySelector('.search-destination input');
     const searchButton = document.querySelector('.btn-search');
-    const categoryCards = document.querySelectorAll('.cat-card');
+    const categoryCards = document.querySelectorAll('.cat-card[data-cat]');
     const destinationCards = document.querySelectorAll('.dest-card');
     const destinationGrid = document.querySelector('.dest-grid');
     const destinationSection = document.querySelector('#destinations');
@@ -172,23 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = card.dataset.category?.toLowerCase() || '';
 
             const searchableText = `${name} ${location} ${category}`;
-
             const matchesSearch = words.every((word) => searchableText.includes(word));
             const matchesCategory = !activeCategory || category === activeCategory;
 
-            if (matchesSearch && matchesCategory) {
-                card.style.display = '';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
+            const visible = matchesSearch && matchesCategory;
+            card.style.display = visible ? '' : 'none';
+
+            if (visible) visibleCount++;
         });
 
         let emptyMessage = destinationGrid?.querySelector('.filter-empty');
 
         if (visibleCount === 0 && destinationCards.length > 0) {
             if (!emptyMessage) {
-                emptyMessage = document.createElement('div');
+                emptyMessage = document.createElement('p');
                 emptyMessage.className = 'dest-empty filter-empty';
                 emptyMessage.textContent = 'Tidak ada destinasi yang sesuai.';
                 destinationGrid?.appendChild(emptyMessage);
@@ -202,13 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
         card.addEventListener('click', () => {
             const category = card.dataset.cat.toLowerCase();
 
-            activeCategory = activeCategory === category ? null : category;
+            activeCategory = category === 'semua' ? null : category;
 
             categoryCards.forEach((item) => {
-                item.classList.toggle(
-                    'active',
-                    item.dataset.cat.toLowerCase() === activeCategory
-                );
+                item.classList.toggle('active', item === card);
             });
 
             filterDestinations();

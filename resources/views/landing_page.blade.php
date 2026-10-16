@@ -22,13 +22,13 @@
         <a href="{{ url('/') }}" class="nav-logo">Wandee</a>
 
         <div class="nav-links">
-            <a href="{{ url('/') }}">Beranda</a>
+            <a href="{{ url('/') }}" class="active">Beranda</a>
             <a href="#destinations">Destinasi</a>
             <a href="#categories">Kategori</a>
         </div>
 
         <div class="nav-actions">
-            <a href="{{ url('/login') }}" class="btn-primary">Masuk</a>
+            <a href="{{ route('login') }}" class="btn-primary">Masuk</a>
         </div>
     </nav>
 
