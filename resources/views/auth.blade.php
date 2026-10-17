@@ -5,11 +5,11 @@
 
 @section('content')
 
-@if (session('error') || $errors->any())
+@if (session('error') || (isset($errors) && $errors->any()))
     <div class="auth-error-popup is-open" id="authErrorPopup" role="alertdialog" aria-modal="true">
         <div class="auth-error-card">
             <h2>Terjadi Kesalahan</h2>
-            <p>{{ session('error') ?? $errors->first() }}</p>
+            <p>{{ session('error') ?? ($errors->first() ?? '') }}</p>
             <button class="btn-close-popup" id="closeAuthErrorPopup" type="button">Tutup</button>
         </div>
     </div>
@@ -22,6 +22,8 @@
         </div>
     </div>
 @endif
+
+@include('partials.navbar')
 
 <div class="auth-wrap">
 

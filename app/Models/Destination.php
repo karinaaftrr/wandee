@@ -21,4 +21,19 @@ class Destination extends Model
         'itinerary',
         'facilities',
     ];
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class)->orderByDesc('created_at');
+    }
 }

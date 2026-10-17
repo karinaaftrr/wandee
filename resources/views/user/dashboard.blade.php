@@ -1,193 +1,183 @@
+@extends('layouts.app')
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dasbor Pengguna - Wandee</title>
+@section('title', 'Dasbor Pengguna - Wandee')
+@section('body-class', 'dashboard-page')
 
-    @vite([
-    'resources/css/styles.css',
-    'resources/js/script.js'
-    ])
+@section('content')
+@include('partials.navbar')
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="dashboard-page">
+{{-- HERO SECTION --}}
+<section class="hero dashboard-hero">
+    <div class="hero-bg">
+        <img src="{{ asset('assets/img/gunung.png') }}" alt="Pemandangan pegunungan" class="hero-img">
+        <div class="hero-overlay"></div>
+    </div>
 
-    @include('partials.navbar')
+    <div class="hero-content dashboard-hero-content">
+        <p class="dashboard-welcome">
+            Hai, {{ $name ?? auth()->user()->name }}
+        </p>
 
-    <main>
-        <section class="hero dashboard-hero">
-            <div class="hero-content">
-                <p>Hai, {{ auth()->user()->name ?? 'Pengguna' }}!</p>
+        <p class="hero-eyebrow">
+            Jelajahi Keindahan Dunia Bersama
+            <span class="accent">Wandee</span>
+        </p>
 
-                <h1>
-                    Temukan destinasi eksotis, petualangan tak terlupakan,
-                    dan momen berharga.
-                </h1>
+        <h1 class="hero-title">
+            Temukan destinasi eksotis,<br>
+            petualangan tak terlupakan,<br>
+            dan momen berharga.
+        </h1>
 
-                <p>
-                    Jelajahi berbagai destinasi menarik dan rencanakan
-                    perjalananmu bersama Wandee.
-                </p>
+        <div class="hero-cta">
+            <a href="#destinations" class="btn-primary btn-lg">
+                Mulai Eksplorasi
+            </a>
 
-                <div class="hero-actions">
-                    <a href="#destinations" class="btn-primary">
-                        Mulai Eksplorasi
-                    </a>
+            <a href="{{ route('user.riwayat') }}" class="btn-ghost btn-lg">
+                Lihat Perjalanan Saya
+            </a>
+        </div>
 
-                    <a href="#destinations" class="btn-secondary">
-                        Lihat Destinasi
-                    </a>
+        <div class="search-bar">
+            <div class="search-field search-destination">
+                <input type="text" id="searchInput" placeholder="Mau pergi ke mana?">
+            </div>
+
+            <div class="search-divider"></div>
+
+            <button type="button" class="btn-search" aria-label="Cari">
+                <i data-lucide="search"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+{{-- CATEGORIES --}}
+<section class="categories">
+    <div class="container">
+        <div class="cat-grid">
+            <a href="#destinations" class="cat-card" data-cat="Gunung">
+                <div class="cat-icon">
+                    <i data-lucide="mountain"></i>
                 </div>
+                <span>Gunung</span>
+            </a>
 
-                <div class="search-destination">
-                    <input
-                        type="text"
-                        id="destinationSearch"
-                        placeholder="Cari destinasi atau lokasi..."
-                        aria-label="Cari destinasi"
-                    >
-
-                    <button type="button" class="btn-search">
-                        <i data-lucide="search"></i>
-                        Cari
-                    </button>
+            <a href="#destinations" class="cat-card" data-cat="Pantai">
+                <div class="cat-icon">
+                    <i data-lucide="waves"></i>
                 </div>
-            </div>
-        </section>
+                <span>Pantai</span>
+            </a>
 
-        <section class="categories section-container">
-            <div class="section-heading">
-                <h2>Jelajahi Berdasarkan Kategori</h2>
-                <p>
-                    Temukan destinasi sesuai petualangan yang kamu inginkan.
+            <a href="#destinations" class="cat-card" data-cat="Air Terjun">
+                <div class="cat-icon">
+                    <i data-lucide="droplets"></i>
+                </div>
+                <span>Air Terjun</span>
+            </a>
+
+            <a href="#destinations" class="cat-card" data-cat="Kota">
+                <div class="cat-icon">
+                    <i data-lucide="building-2"></i>
+                </div>
+                <span>Kota</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+{{-- DESTINATIONS --}}
+<section class="recommended" id="destinations">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Rekomendasi Untukmu</h2>
+                <p class="section-sub">
+                    Pilihan trip terbaik yang siap menemani perjalananmu.
                 </p>
             </div>
 
-            <div class="category-list">
-                <button type="button" class="cat-card active" data-cat="semua">
-                    Semua
-                </button>
+            <a href="{{ route('user.favorite') }}" class="view-all">
+                Lihat Favorit
+            </a>
+        </div>
 
-                <button type="button" class="cat-card" data-cat="gunung">
-                    Gunung
-                </button>
+        @if(session('success'))
+            <p class="success-message" style="color: #39ff78; margin-bottom: 20px;">
+                {{ session('success') }}
+            </p>
+        @endif
 
-                <button type="button" class="cat-card" data-cat="pantai">
-                    Pantai
-                </button>
+        <div class="dest-grid">
+            @forelse ($destinations as $dest)
+                @php
+                    $destId = $dest->id;
+                    $displayRating = !empty($ratingStats[$destId]->total_reviews)
+                        ? number_format((float)$ratingStats[$destId]->avg_rating, 1)
+                        : number_format((float)($dest->rating ?? 5.0), 1);
+                    $isFavorite = in_array($destId, $favoriteDestinationIds ?? []);
+                @endphp
 
-                <button type="button" class="cat-card" data-cat="air terjun">
-                    Air Terjun
-                </button>
+                <article class="dest-card" data-category="{{ $dest->category }}">
+                    <div class="dest-thumb">
+                        <a href="{{ route('user.detail', $destId) }}" class="dest-thumb-link" aria-label="Lihat detail {{ $dest->title }}">
+                            <img src="{{ asset('assets/img/' . $dest->image) }}"
+                                 alt="{{ $dest->title }}"
+                                 class="dest-img"
+                                 onerror="this.src='{{ asset('assets/img/gunung.png') }}'" />
+                        </a>
 
-                <button type="button" class="cat-card" data-cat="kota">
-                    Kota
-                </button>
-            </div>
-        </section>
+                        <div class="dest-badge">★ {{ $displayRating }}</div>
 
-        <section class="recommended section-container" id="destinations">
-            <div class="section-heading">
-                <h2>Rekomendasi Destinasi</h2>
-                <p>
-                    Temukan tempat menarik untuk perjalanan berikutnya.
-                </p>
-            </div>
+                        <form action="{{ route('user.favorite_toggle') }}" method="POST" class="dest-favorite-form">
+                            @csrf
+                            <input type="hidden" name="destination_id" value="{{ $destId }}">
+                            <button type="submit" class="dest-favorite-btn {{ $isFavorite ? 'is-active' : '' }}" aria-label="{{ $isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit' }}">
+                                <i data-lucide="heart"></i>
+                            </button>
+                        </form>
 
-            @if (session('success'))
-                <p class="success-message">
-                    {{ session('success') }}
-                </p>
-            @endif
+                        <div class="dest-tags">
+                            @if ((int)($dest->quota ?? 0) > 0)
+                                <span class="tag">Perjalanan Terbuka</span>
+                            @else
+                                <span class="tag tag-full" style="background: rgba(255, 79, 129, 0.15); color: #ff4f81;">Kuota Penuh</span>
+                            @endif
+                        </div>
+                    </div>
 
-            <div class="dest-grid" id="destinationGrid">
-                @forelse ($destinations as $destination)
-                    <article
-                        class="dest-card"
-                        data-category="{{ strtolower($destination->category ?? '') }}"
-                    >
-                        <div class="dest-image">
-                            <img
-                                src="{{ asset('assets/img/' . $destination->image) }}"
-                                alt="{{ $destination->title }}"
-                                onerror="this.onerror=null;this.src='{{ asset('assets/img/gunung.png') }}'"
-                            >
+                    <div class="dest-body">
+                        <h3 class="dest-name">
+                            <a href="{{ route('user.detail', $destId) }}">{{ $dest->title }}</a>
+                        </h3>
 
-                            <form
-                                method="POST"
-                                action="{{ route('user.favorites.toggle') }}"
-                            >
-                                @csrf
-
-                                <input
-                                    type="hidden"
-                                    name="destination_id"
-                                    value="{{ $destination->id }}"
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="favorite-btn {{ in_array($destination->id, $favoriteDestinationIds) ? 'favorited' : '' }}"
-                                    aria-label="Tambah atau hapus favorit"
-                                >
-                                    <i data-lucide="heart"></i>
-                                </button>
-                            </form>
+                        <div class="dest-loc">
+                            <i data-lucide="map-pin"></i>
+                            {{ $dest->location }}
                         </div>
 
-                        <div class="dest-content">
-                            <div class="dest-rating">
-                                <i data-lucide="star"></i>
-
-                                <span>
-                                    {{ number_format((float) ($ratingStats[$destination->id]->avg_rating ?? $destination->rating ?? 5), 1) }}
-                                </span>
-
-                                <span>
-                                    ({{ $ratingStats[$destination->id]->total_reviews ?? 0 }}
-                                    ulasan)
-                                </span>
+                        <div class="dest-footer">
+                            <div class="dest-date">
+                                {{ $dest->trip_date ?: '-' }}
                             </div>
 
-                            <h3 class="dest-name">
-                                {{ $destination->title }}
-                            </h3>
-
-                            <p class="dest-loc">
-                                <i data-lucide="map-pin"></i>
-                                {{ $destination->location }}
-                            </p>
-
-                            <p class="dest-date">
-                                {{ $destination->trip_date ?? 'Jadwal menyesuaikan' }}
-                            </p>
-
-                            <div class="dest-footer">
-                                <strong>
-                                    @if (is_numeric($destination->price))
-                                        Rp {{ number_format((float) $destination->price, 0, ',', '.') }}
-                                    @else
-                                        {{ $destination->price }}
-                                    @endif
-                                </strong>
-
-                                <span class="dest-status">
-                                    {{ ($destination->quota ?? 0) > 0 ? 'Tersedia' : 'Penuh' }}
-                                </span>
+                            <div class="dest-price">
+                                <span class="per-person">Per Orang</span>
+                                <span class="price">Rp {{ number_format((int)$dest->price, 0, ',', '.') }}</span>
                             </div>
                         </div>
-                    </article>
-                @empty
-                    <p>Belum ada destinasi yang tersedia.</p>
-                @endforelse
-            </div>
-        </section>
-    </main>
+                    </div>
+                </article>
+            @empty
+                <div class="dest-empty">
+                    Belum ada destinasi tersedia.
+                </div>
+            @endforelse
+        </div>
+    </div>
+</section>
 
-    @include('partials.footer')
-</body>
-</html>
+@include('partials.footer')
+@endsection

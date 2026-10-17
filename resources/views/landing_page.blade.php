@@ -98,18 +98,32 @@
             @forelse ($destinations as $dest)
                 <article class="dest-card" data-category="{{ $dest->category }}">
                     <div class="dest-thumb">
-                        <div class="dest-thumb-link">
+                        <a href="{{ route('user.detail', $dest->id) }}" class="dest-thumb-link" aria-label="Lihat detail {{ $dest->title }}">
                             <img
                                 src="{{ asset('assets/img/' . $dest->image) }}"
                                 alt="{{ $dest->title }}"
                                 class="dest-img"
                                 onerror="this.onerror=null;this.src='{{ asset('assets/img/gunung.png') }}';"
                             >
-                        </div>
+                        </a>
 
                         <div class="dest-badge">
                             ★ {{ number_format((float) ($dest->rating ?? 5.0), 1) }}
                         </div>
+
+                        @auth
+                            <form action="{{ route('user.favorite_toggle') }}" method="POST" class="dest-favorite-form">
+                                @csrf
+                                <input type="hidden" name="destination_id" value="{{ $dest->id }}">
+                                <button type="submit" class="dest-favorite-btn {{ in_array($dest->id, $favoriteDestinationIds ?? []) ? 'is-active' : '' }}" aria-label="Favorit">
+                                    <i data-lucide="heart"></i>
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}" class="dest-favorite-btn" aria-label="Login untuk favorit">
+                                <i data-lucide="heart"></i>
+                            </a>
+                        @endauth
 
                         <div class="dest-tags">
                             @if ((int) ($dest->quota ?? 0) > 0)
@@ -122,7 +136,7 @@
 
                     <div class="dest-body">
                         <h3 class="dest-name">
-                            {{ $dest->title }}
+                            <a href="{{ route('user.detail', $dest->id) }}">{{ $dest->title }}</a>
                         </h3>
 
                         <div class="dest-loc">

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ManageController as AdminManageController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
@@ -25,6 +26,30 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // User routes
+    Route::prefix('user')->name('user.')->group(function () {
+        Route::get('/dashboard', [UserController::class, 'index'])->name('dashboard');
+        Route::get('/detail/{id?}', [UserController::class, 'detail'])->name('detail');
+        Route::get('/favorite', [UserController::class, 'favorite'])->name('favorite');
+        Route::post('/favorite_toggle', [UserController::class, 'toggleFavorite'])->name('favorite_toggle');
+
+        // Booking & Payment
+        Route::get('/payment/{id?}', [UserController::class, 'payment'])->name('payment');
+        Route::post('/payment_init', [UserController::class, 'paymentInit'])->name('payment_init');
+        Route::get('/payment_detail', [UserController::class, 'paymentDetail'])->name('payment_detail');
+        Route::post('/payment_upload', [UserController::class, 'paymentUpload'])->name('payment_upload');
+        Route::get('/payment_status', [UserController::class, 'paymentStatus'])->name('payment_status');
+
+        // Riwayat & Ulasan
+        Route::get('/riwayat', [UserController::class, 'riwayat'])->name('riwayat');
+        Route::get('/ulasan', [UserController::class, 'ulasan'])->name('ulasan');
+        Route::post('/ulasan', [UserController::class, 'submitReview'])->name('ulasan.submit');
+
+        // Profil
+        Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+        Route::post('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+    });
 });
 
 // Admin routes
