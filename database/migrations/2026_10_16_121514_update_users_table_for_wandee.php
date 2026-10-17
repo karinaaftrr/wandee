@@ -9,12 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 20)->default('user');
-            $table->string('photo')->nullable();
-            $table->string('oauth_provider', 50)->nullable();
-            $table->string('oauth_uid')->nullable();
-        });
+        // Columns already defined in create_users_table migration.
+        // This migration is kept as a no-op to avoid duplicate column errors.
     }
 
     public function down(): void

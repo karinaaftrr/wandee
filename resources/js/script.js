@@ -221,4 +221,55 @@ document.addEventListener('DOMContentLoaded', () => {
             block: 'start'
         });
     });
+
+    // LOGOUT MODAL
+    const logoutModal = document.getElementById('logoutModal');
+    const logoutLinks = document.querySelectorAll('[data-logout-link]');
+    const logoutCancelButtons = document.querySelectorAll('[data-logout-cancel]');
+
+    function openLogoutModal(event) {
+        event.preventDefault();
+        logoutModal?.classList.add('is-open');
+        logoutModal?.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeLogoutModal() {
+        logoutModal?.classList.remove('is-open');
+        logoutModal?.setAttribute('aria-hidden', 'true');
+    }
+
+    logoutLinks.forEach((link) => {
+        link.addEventListener('click', openLogoutModal);
+    });
+
+    logoutCancelButtons.forEach((button) => {
+        button.addEventListener('click', closeLogoutModal);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeLogoutModal();
+    });
+
+    // NAVBAR SCROLL EFFECT
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 30) {
+                navbar.style.background = 'rgba(3, 10, 7, .82)';
+                navbar.style.backdropFilter = 'blur(20px)';
+            } else {
+                navbar.style.background = 'rgba(3, 10, 7, .62)';
+            }
+        });
+    }
+
+    // MOBILE MENU TOGGLE
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('show');
+        });
+    }
 });

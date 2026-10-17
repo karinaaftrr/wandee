@@ -12,6 +12,12 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::check()) {
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+            return redirect('/');
+        }
         return view('auth');
     }
 
@@ -23,18 +29,16 @@ class AuthController extends Controller
         ]);
 
         if (!Auth::attempt($credentials)) {
-            throw ValidationException::withMessages([
-                'email' => 'Email atau password salah.',
-            ]);
+            return back()->withErrors(['email' => 'Email atau password yang Anda masukkan salah. Silakan coba lagi.'])->withInput();
         }
 
         $request->session()->regenerate();
 
         if (Auth::user()->role === 'admin') {
-            return redirect('/admin/dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
-        return redirect('/user/dashboard');
+        return redirect('/');
     }
 
     public function register(Request $request)
@@ -42,7 +46,14 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:100', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:6'],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
         $user = User::create([
@@ -55,7 +66,33 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect('/user/dashboard');
+        return redirect('/')->with('success', 'Akun berhasil dibuat!');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak terdaftar di sistem kami.'])->withInput();
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('login')->with('success', 'Password berhasil diperbarui! Silakan masuk menggunakan password baru.');
     }
 
     public function logout(Request $request)
@@ -66,5 +103,5 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
-    } //
+    }
 }
