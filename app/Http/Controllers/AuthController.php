@@ -56,17 +56,14 @@ class AuthController extends Controller
             'password.min' => 'Password minimal 6 karakter.',
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'user',
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect('/')->with('success', 'Akun berhasil dibuat!');
+        return redirect()->route('login')->with('success', 'Akun berhasil dibuat! Silakan masuk menggunakan akun baru Anda.');
     }
 
     public function resetPassword(Request $request)

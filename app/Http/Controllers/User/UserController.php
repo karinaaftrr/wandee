@@ -224,6 +224,33 @@ class UserController extends Controller
     }
 
     /**
+     * Detail Trip (dari Riwayat)
+     */
+    public function tripDetail(Request $request)
+    {
+        $booking_id = $request->query('booking_id');
+        $booking = Booking::with('destination')->where('id', $booking_id)->where('user_id', Auth::id())->firstOrFail();
+        $payment = Payment::where('booking_id', $booking->id)->latest()->firstOrFail();
+        $destination = $booking->destination;
+
+        $detailData = $this->prepareDestinationDetail($destination);
+
+        $hasReviewed = Review::where('user_id', Auth::id())
+            ->where('destination_id', $destination->id)
+            ->exists();
+
+        $isVerified = $payment->payment_status === 'verified';
+
+        return view('user.trip_detail', array_merge([
+            'booking' => $booking,
+            'payment' => $payment,
+            'destination' => $destination,
+            'hasReviewed' => $hasReviewed,
+            'isVerified' => $isVerified,
+        ], $detailData));
+    }
+
+    /**
      * Riwayat Perjalanan
      */
     public function riwayat()
@@ -233,7 +260,12 @@ class UserController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return view('user.riwayat', compact('bookings'));
+        $reviewedDestinationIds = Review::where('user_id', Auth::id())
+            ->pluck('destination_id')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
+
+        return view('user.riwayat', compact('bookings', 'reviewedDestinationIds'));
     }
 
     /**
@@ -287,14 +319,15 @@ class UserController extends Controller
     /**
      * Halaman Ulasan
      */
-    public function ulasan()
+    public function ulasan(Request $request)
     {
         $userId = Auth::id();
 
         // Ambil trip yang sudah selesai dan pembayarannya terverifikasi
-        $completedBookings = Booking::with('destination')
+        $completedBookings = Booking::with(['destination', 'payment'])
             ->where('user_id', $userId)
             ->where('trip_status', 'completed')
+            ->whereHas('payment', fn($q) => $q->where('payment_status', 'verified'))
             ->get();
 
         $reviewedDestinationIds = Review::where('user_id', $userId)
@@ -302,10 +335,22 @@ class UserController extends Controller
             ->toArray();
 
         $eligibleBookings = $completedBookings->filter(function ($booking) use ($reviewedDestinationIds) {
-            return !in_array($booking->destination_id, $reviewedDestinationIds);
+            $payment = $booking->payment;
+            $isVerified = $payment && $payment->payment_status === 'verified';
+            return $isVerified && !in_array($booking->destination_id, $reviewedDestinationIds);
         })->values();
 
-        $selectedBooking = $eligibleBookings->first();
+        // Pre-select dari query param (dari riwayat)
+        $preSelectedDestinationId = $request->query('destination_id');
+        $selectedBooking = null;
+
+        if ($preSelectedDestinationId) {
+            $selectedBooking = $eligibleBookings->firstWhere('destination_id', $preSelectedDestinationId);
+        }
+
+        if (!$selectedBooking) {
+            $selectedBooking = $eligibleBookings->first();
+        }
 
         // Ulasan yang sudah pernah ditulis oleh user
         $myReviews = Review::with('destination')
@@ -313,7 +358,7 @@ class UserController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('user.ulasan', compact('eligibleBookings', 'selectedBooking', 'myReviews'));
+        return view('user.ulasan', compact('eligibleBookings', 'selectedBooking', 'myReviews', 'preSelectedDestinationId'));
     }
 
     /**
@@ -336,14 +381,15 @@ class UserController extends Controller
         $userId = Auth::id();
         $destinationId = $request->destination_id;
 
-        // Cek eligibility: harus punya booking yang completed
+        // Cek eligibility: trip harus selesai dan pembayaran terverifikasi
         $eligible = Booking::where('user_id', $userId)
             ->where('destination_id', $destinationId)
             ->where('trip_status', 'completed')
+            ->whereHas('payment', fn($q) => $q->where('payment_status', 'verified'))
             ->exists();
 
         if (!$eligible) {
-            return back()->with('review_error', 'Ulasan hanya bisa diberikan setelah perjalanan destinasi tersebut selesai.');
+            return back()->with('review_error', 'Ulasan hanya bisa diberikan setelah perjalanan selesai dan pembayaran terverifikasi.');
         }
 
         if (Review::where('user_id', $userId)->where('destination_id', $destinationId)->exists()) {
@@ -379,7 +425,9 @@ class UserController extends Controller
             ]);
         }
 
-        return redirect()->route('user.ulasan')->with('review_message', 'Ulasan berhasil dikirim. Terima kasih sudah berbagi pengalaman!');
+        return redirect()
+            ->route('user.detail', ['id' => $destinationId, 'buka_ulasan' => 1])
+            ->with('review_message', 'Ulasan berhasil dikirim. Terima kasih sudah berbagi pengalaman!');
     }
 
     /**
