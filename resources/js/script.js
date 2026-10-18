@@ -6,10 +6,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const navLinks = document.querySelectorAll('.nav-links a');
 
+    function checkActiveHash() {
+        const hash = window.location.hash;
+        const pathname = window.location.pathname;
+        const isHome = pathname === '/' || pathname === '' || pathname.includes('/user/dashboard');
+
+        if (isHome) {
+            navLinks.forEach((link) => {
+                const href = link.getAttribute('href');
+                if (hash === '#destinations') {
+                    if (href && href.includes('#destinations')) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                } else if (hash === '' || hash === '#') {
+                    if (href && href.includes('#destinations')) {
+                        link.classList.remove('active');
+                    } else if (link.textContent.includes('Jelajah')) {
+                        link.classList.add('active');
+                    }
+                }
+            });
+        }
+    }
+
+    checkActiveHash();
+    window.addEventListener('hashchange', checkActiveHash);
+
     navLinks.forEach((link) => {
         link.addEventListener('click', () => {
-            navLinks.forEach((item) => item.classList.remove('active'));
-            link.classList.add('active');
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                navLinks.forEach((item) => item.classList.remove('active'));
+                link.classList.add('active');
+            }
         });
     });
 
@@ -263,13 +294,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // MOBILE MENU TOGGLE
+    // MOBILE MENU & DRAWER TOGGLE
     const menuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
+    const menuCloseBtn = document.getElementById('mobileMenuClose');
+    const navOverlay = document.getElementById('navOverlay');
+
+    function openMobileMenu() {
+        if (!mobileMenu) return;
+        mobileMenu.classList.add('show');
+        navOverlay?.classList.add('show');
+        document.body.classList.add('mobile-menu-open');
+        menuBtn?.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMobileMenu() {
+        if (!mobileMenu) return;
+        mobileMenu.classList.remove('show');
+        navOverlay?.classList.remove('show');
+        document.body.classList.remove('mobile-menu-open');
+        menuBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleMobileMenu() {
+        if (mobileMenu?.classList.contains('show')) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
 
     if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('show');
+        menuBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleMobileMenu();
+        });
+
+        menuCloseBtn?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            closeMobileMenu();
+        });
+
+        navOverlay?.addEventListener('click', () => {
+            closeMobileMenu();
+        });
+
+        mobileMenu.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                closeMobileMenu();
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (mobileMenu?.classList.contains('show')) {
+                if (!mobileMenu.contains(event.target) && !menuBtn?.contains(event.target)) {
+                    closeMobileMenu();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeMobileMenu();
+            }
         });
     }
 });
