@@ -21,64 +21,82 @@
         </div>
     @endif
 
-    <div class="chart-card chart-card-custom" style="padding:32px;">
-        <form action="{{ route('admin.update_destination', $data->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+    <form class="manage-form" action="{{ route('admin.update_destination', $data->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Judul</label>
-                    <input type="text" class="form-input" name="title" value="{{ old('title', $data->title) }}" required>
+        <div class="manage-grid">
+            <div class="manage-field">
+                <label for="title">Nama Destinasi</label>
+                <input type="text" id="title" name="title" value="{{ old('title', $data->title) }}" required>
+            </div>
+
+            <div class="manage-field">
+                <label for="location">Lokasi</label>
+                <input type="text" id="location" name="location" value="{{ old('location', $data->location) }}" required>
+            </div>
+
+            <div class="manage-field">
+                <label for="category">Kategori</label>
+                <select id="category" name="category" required>
+                    @foreach (['Gunung', 'Pantai', 'Air Terjun', 'Kota'] as $cat)
+                        <option value="{{ $cat }}" {{ old('category', $data->category) === $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="manage-field">
+                <label for="price">Harga</label>
+                <input type="number" id="price" name="price" value="{{ old('price', (int) $data->price) }}" min="0" step="1" required>
+                <small style="color:rgba(232,240,235,.5);">Masukkan angka. Contoh: 1500000 atau 1500000.00</small>
+            </div>
+
+            <div class="manage-field">
+                <label for="trip_date">Tanggal Trip</label>
+                <input type="text" id="trip_date" name="trip_date" value="{{ old('trip_date', $data->trip_date) }}" placeholder="Contoh: 12-14 Juni 2026">
+            </div>
+
+            <div class="manage-field">
+                <label for="quota">Kuota Peserta</label>
+                <input type="number" id="quota" name="quota" value="{{ old('quota', $data->quota) }}" min="0" required>
+            </div>
+
+            <div class="manage-field">
+                <label for="facilities">Fasilitas (Pisahkan dengan koma)</label>
+                <input type="text" id="facilities" name="facilities" value="{{ old('facilities', $data->facilities) }}" placeholder="Contoh: Transportasi, Porter, Tenda, Makan">
+                <small style="color:rgba(232,240,235,.5);">Gunakan koma sebagai pemisah.</small>
+            </div>
+
+            <div class="manage-field">
+                <label for="rating">Rating Akumulasi</label>
+                <input type="text" id="rating" name="rating" value="{{ old('rating', number_format((float) $data->rating, 1, ',', '')) }}" inputmode="decimal" placeholder="Contoh: 4,5">
+            </div>
+
+            <div class="manage-field full-span">
+                <label for="description">Deskripsi</label>
+                <textarea id="description" name="description" rows="5">{{ old('description', $data->description) }}</textarea>
+            </div>
+
+            @include('partials.itinerary_builder', ['itinerary' => $itinerary])
+
+            <div class="manage-field full-span">
+                <label>Ganti Gambar (Opsional)</label>
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;">
+                    <img src="{{ asset('assets/img/' . $data->image) }}" alt="{{ $data->title }}"
+                         style="width:90px;height:90px;object-fit:cover;border-radius:12px;"
+                         onerror="this.onerror=null;this.src='{{ asset('assets/img/gunung.png') }}';">
+                    <span style="color:rgba(232,240,235,.5);font-size:.85rem;">Gambar saat ini</span>
                 </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Lokasi</label>
-                    <input type="text" class="form-input" name="location" value="{{ old('location', $data->location) }}" required>
-                </div>
+                <label class="file-upload-box" for="destImage">
+                    <span class="file-upload-button">Choose File</span>
+                    <span class="file-upload-name" id="destImageName">Belum ada file dipilih</span>
+                </label>
+                <input type="file" id="destImage" name="image" class="file-upload-input" accept="image/jpeg,image/png">
+                <small style="color:rgba(232,240,235,.5);">Format JPG / JPEG / PNG, maksimal 5 MB. Kosongkan jika tidak ingin mengganti gambar.</small>
             </div>
+        </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;">
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Kategori</label>
-                    <select class="form-input" name="category" required>
-                        <option value="Gunung" {{ $data->category === 'Gunung' ? 'selected' : '' }}>Gunung</option>
-                        <option value="Pantai" {{ $data->category === 'Pantai' ? 'selected' : '' }}>Pantai</option>
-                        <option value="Air Terjun" {{ $data->category === 'Air Terjun' ? 'selected' : '' }}>Air Terjun</option>
-                        <option value="Kota" {{ $data->category === 'Kota' ? 'selected' : '' }}>Kota</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Harga</label>
-                    <input type="text" class="form-input" name="price" value="{{ old('price', $data->price) }}" required>
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Kuota</label>
-                    <input type="number" class="form-input" name="quota" value="{{ old('quota', $data->quota) }}" min="0" required>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom:20px;">
-                <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Tanggal Trip</label>
-                <input type="text" class="form-input" name="trip_date" value="{{ old('trip_date', $data->trip_date) }}" placeholder="cth: 15 Jan 2026 - 18 Jan 2026">
-            </div>
-
-            <div class="form-group" style="margin-bottom:20px;">
-                <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Deskripsi</label>
-                <textarea class="form-input" name="description" rows="4" style="resize:vertical;">{{ old('description', $data->description) }}</textarea>
-            </div>
-
-            <div class="form-group" style="margin-bottom:20px;">
-                <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Itinerary</label>
-                <textarea class="form-input" name="itinerary" rows="3" style="resize:vertical;">{{ old('itinerary', $data->itinerary) }}</textarea>
-            </div>
-
-            <div class="form-group" style="margin-bottom:24px;">
-                <label style="display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">Fasilitas</label>
-                <textarea class="form-input" name="facilities" rows="3" style="resize:vertical;">{{ old('facilities', $data->facilities) }}</textarea>
-            </div>
-
-            <button type="submit" class="btn-primary" style="padding:12px 32px;">Simpan Perubahan</button>
-        </form>
-    </div>
+        <button type="submit" class="btn-primary">Update Destinasi</button>
+    </form>
 
 @endsection
