@@ -6803,3 +6803,13 @@ button.logout-btn:hover {
     opacity: 1;
     cursor: pointer;
 }
+
+/* Tombol Keluar di sidebar admin */
+.admin-menu a[data-logout-link] {
+    color: #ff5b68 !important;
+}
+
+.admin-menu a[data-logout-link]:hover {
+    background: rgba(255, 91, 104, .12);
+    color: #ff5b68 !important;
+}

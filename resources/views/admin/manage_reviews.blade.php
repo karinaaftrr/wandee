@@ -47,7 +47,8 @@
                             </td>
                             <td class="dashboard-table-td">
                                 <form action="{{ route('admin.review_delete', $review->id) }}" method="POST"
-                                      onsubmit="return confirm('Yakin ingin menghapus ulasan ini?')">
+                                      data-confirm-title="Hapus ulasan?"
+                                      data-confirm="Yakin ingin menghapus ulasan ini? Tindakan ini tidak bisa dibatalkan.">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-ghost" style="padding:6px 14px;font-size:.75rem;border-color:rgba(255,79,129,.4);color:#ff4f81;">
