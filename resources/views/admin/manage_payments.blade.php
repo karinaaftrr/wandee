@@ -63,12 +63,10 @@
                                             <input type="hidden" name="status" value="verified">
                                             <button type="submit" class="btn-primary" style="padding:6px 14px;font-size:.75rem;">Verifikasi</button>
                                         </form>
-                                        <form action="{{ route('admin.payment_update') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="payment_id" value="{{ $payment->id }}">
-                                            <input type="hidden" name="status" value="rejected">
-                                            <button type="submit" class="btn-ghost" style="padding:6px 14px;font-size:.75rem;border-color:rgba(255,79,129,.4);color:#ff4f81;">Tolak</button>
-                                        </form>
+                                        <button type="button" class="btn-ghost js-reject-btn"
+                                            data-payment-id="{{ $payment->id }}"
+                                            data-payer="{{ $payment->user_name ?? 'Guest' }}"
+                                            style="padding:6px 14px;font-size:.75rem;border-color:rgba(255,79,129,.4);color:#ff4f81;">Tolak</button>
                                     </div>
                                 @elseif ($ps === 'verified' && ($payment->trip_status ?? '') === 'ongoing')
                                     <form action="{{ route('admin.trip_complete') }}" method="POST">
@@ -90,5 +88,70 @@
             </table>
         </div>
     </div>
+
+    {{-- MODAL ALASAN PENOLAKAN --}}
+    <div class="logout-modal" id="rejectModal" aria-hidden="true">
+        <div class="logout-modal-backdrop" data-reject-cancel></div>
+        <form class="logout-dialog reject-dialog" id="rejectForm" action="{{ route('admin.payment_update') }}" method="POST" role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
+            @csrf
+            <input type="hidden" name="payment_id" id="rejectPaymentId">
+            <input type="hidden" name="status" value="rejected">
+            <h3 id="rejectTitle">Tolak pembayaran</h3>
+            <p id="rejectDesc">Tulis alasan penolakan agar pemesan tahu apa yang perlu diperbaiki.</p>
+            <textarea name="rejection_reason" id="rejectReason" maxlength="500" placeholder="Contoh: Bukti transfer tidak jelas / nominal tidak sesuai"></textarea>
+            <div class="reject-error" id="rejectError">Alasan penolakan wajib diisi.</div>
+            <div class="logout-actions">
+                <button type="button" class="logout-cancel" data-reject-cancel>Batal</button>
+                <button type="submit" class="logout-confirm is-danger">Konfirmasi Tolak</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        (function () {
+            var modal = document.getElementById('rejectModal');
+            var form = document.getElementById('rejectForm');
+            var reason = document.getElementById('rejectReason');
+            var error = document.getElementById('rejectError');
+
+            function open(id, payer) {
+                document.getElementById('rejectPaymentId').value = id;
+                document.getElementById('rejectDesc').textContent =
+                    'Tulis alasan menolak pembayaran dari ' + payer + '. Pesanan akan ditolak setelah kamu konfirmasi.';
+                reason.value = '';
+                error.classList.remove('show');
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden', 'false');
+                setTimeout(function () { reason.focus(); }, 50);
+            }
+
+            function close() {
+                modal.classList.remove('is-open');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+
+            document.querySelectorAll('.js-reject-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    open(btn.dataset.paymentId, btn.dataset.payer);
+                });
+            });
+
+            modal.querySelectorAll('[data-reject-cancel]').forEach(function (el) {
+                el.addEventListener('click', close);
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') close();
+            });
+
+            form.addEventListener('submit', function (e) {
+                if (!reason.value.trim()) {
+                    e.preventDefault();
+                    error.classList.add('show');
+                    reason.focus();
+                }
+            });
+        })();
+    </script>
 
 @endsection

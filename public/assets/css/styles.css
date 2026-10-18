@@ -6051,3 +6051,56 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     filter: none;
 }
+
+
+/* ===== dropdown (select) dark theme: option list tidak putih ===== */
+.manage-field select,
+.profile-field select {
+  color-scheme: dark;
+}
+
+.manage-field select option,
+.manage-field select optgroup,
+.profile-field select option {
+  background-color: #0b1a12;
+  color: #e8f0eb;
+}
+
+.manage-field select option:disabled {
+  color: rgba(232, 240, 235, .45);
+}
+
+/* ===== modal alasan penolakan pembayaran ===== */
+.reject-dialog { width: min(480px, 100%); }
+
+.reject-dialog textarea {
+  width: 100%;
+  min-height: 120px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  resize: vertical;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: #fff;
+  font-size: .92rem;
+  outline: none;
+}
+
+.reject-dialog textarea:focus { border-color: rgba(255, 79, 129, .5); }
+
+.reject-error {
+  display: none;
+  margin-top: 8px;
+  color: #ff4f81;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.reject-error.show { display: block; }
+
+.reject-dialog .logout-confirm.is-danger {
+  background: #ff4f81;
+  color: #fff;
+}
