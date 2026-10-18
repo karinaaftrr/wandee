@@ -6,6 +6,58 @@
 @section('content')
 @include('partials.navbar')
 
+{{-- ====== TOAST NOTIFICATION ====== --}}
+@if(session('review_message') || session('review_error'))
+<div id="reviewToast" style="
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 9999;
+    min-width: 320px;
+    max-width: 520px;
+    background: {{ session('review_message') ? 'rgba(14,28,18,0.97)' : 'rgba(28,10,10,0.97)' }};
+    border: 1px solid {{ session('review_message') ? 'rgba(57,255,120,0.4)' : 'rgba(248,113,113,0.4)' }};
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px {{ session('review_message') ? 'rgba(57,255,120,0.08)' : 'rgba(248,113,113,0.08)' }};
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
+    backdrop-filter: blur(16px);
+">
+    <div style="
+        width: 36px; height: 36px; flex-shrink: 0;
+        border-radius: 50%;
+        background: {{ session('review_message') ? 'rgba(57,255,120,0.15)' : 'rgba(248,113,113,0.15)' }};
+        display: flex; align-items:center; justify-content:center;
+    ">
+        @if(session('review_message'))
+            <i data-lucide="check" style="width:18px;height:18px;color:#39ff78;"></i>
+        @else
+            <i data-lucide="x" style="width:18px;height:18px;color:#f87171;"></i>
+        @endif
+    </div>
+    <div style="flex:1;">
+        <p style="font-size:14px; font-weight:700; color:{{ session('review_message') ? '#39ff78' : '#f87171' }}; margin-bottom:2px;">
+            {{ session('review_message') ? 'Ulasan Berhasil Dikirim! 🎉' : 'Gagal Mengirim Ulasan' }}
+        </p>
+        <p style="font-size:13px; color:rgba(232,240,235,0.7); line-height:1.5;">
+            {{ session('review_message') ?? session('review_error') }}
+        </p>
+    </div>
+    <button onclick="document.getElementById('reviewToast').style.opacity='0'; setTimeout(()=>this.closest('#reviewToast').remove(),350);" style="
+        background: none; border: none; cursor: pointer;
+        color: rgba(232,240,235,0.4); padding: 4px;
+        display:flex; align-items:center;
+    ">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+    </button>
+</div>
+@endif
+
 <main class="review-shell">
 
     <section class="review-layout-new">
@@ -16,13 +68,7 @@
 
             <p>Ceritakan perjalanan luar biasa kamu kepada komunitas penjelajah kami.</p>
 
-            @if(session('review_message'))
-                <div class="alert alert-success">{{ session('review_message') }}</div>
-            @endif
-
-            @if(session('review_error'))
-                <div class="alert alert-danger">{{ session('review_error') }}</div>
-            @endif
+            {{-- Pesan ditampilkan via toast di atas, tidak perlu duplikasi di sini --}}
 
             @if($selectedBooking)
                 <article class="review-trip-preview">
@@ -108,7 +154,8 @@
                         <option value="">Belum ada destinasi yang bisa diulas</option>
                     @else
                         @foreach($eligibleBookings as $booking)
-                            <option value="{{ $booking->destination_id }}">
+                            <option value="{{ $booking->destination_id }}"
+                                {{ (isset($preSelectedDestinationId) && $booking->destination_id == $preSelectedDestinationId) ? 'selected' : '' }}>
                                 {{ $booking->destination->title }} - {{ $booking->destination->location }}
                             </option>
                         @endforeach
@@ -186,6 +233,22 @@
 
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
+        }
+
+        // Toast auto-show & auto-dismiss
+        const toast = document.getElementById('reviewToast');
+        if (toast) {
+            // Slide in
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+            });
+            // Auto-dismiss after 4.5s
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 4500);
         }
     });
 </script>

@@ -25,8 +25,16 @@
                     $paymentStatus = $payment->payment_status ?? $booking->payment_status;
                     $paymentLabel = ucfirst($paymentStatus);
                     $tripLabel = ucfirst($booking->trip_status ?? 'new');
+                    $isAccepted = in_array($booking->trip_status, ['accepted', 'completed', 'ongoing']);
+                    $isVerified = $paymentStatus === 'verified';
+                    $isRejected = $paymentStatus === 'rejected';
+                    $alreadyReviewed = in_array((int) $booking->destination_id, $reviewedDestinationIds ?? [], true);
                 @endphp
-                <article class="trip-history-card">
+                <article class="trip-history-card {{ $isAccepted ? 'trip-card-clickable' : '' }}"
+                    @if($isAccepted)
+                        onclick="window.location='{{ route('user.trip_detail', ['booking_id' => $booking->id]) }}'"
+                        style="cursor: pointer;"
+                    @endif>
                     <img src="{{ asset('assets/img/' . ($booking->destination->image ?? 'gunung.png')) }}" 
                          alt="{{ $booking->destination->title ?? 'Trip' }}"
                          onerror="this.src='{{ asset('assets/img/gunung.png') }}'">
@@ -40,25 +48,33 @@
                         <div class="trip-history-meta">
                             <span><i data-lucide="users"></i>{{ (int)$booking->total_people }} orang</span>
                             <span><i data-lucide="route"></i>{{ $tripLabel }}</span>
-                            <span><i data-lucide="credit-card"></i>{{ $paymentLabel }}</span>
+                            <span @if($isRejected) style="background: rgba(248,113,113,0.12); color: #f87171;" @endif>
+                                <i data-lucide="credit-card" @if($isRejected) style="color: #f87171;" @endif></i>{{ $paymentLabel }}
+                            </span>
                         </div>
                     </div>
 
                     <div class="trip-history-action">
-                        <span class="trip-status">{{ $paymentLabel }}</span>
+                        <span class="trip-status" @if($isRejected) style="background: rgba(248,113,113,0.12); color: #f87171;" @endif>{{ $paymentLabel }}</span>
                         <div class="trip-action-buttons">
                             @if($paymentStatus === 'waiting' || $paymentStatus === 'pending')
-                                <a href="{{ route('user.payment_detail', ['booking_id' => $booking->id, 'payment_id' => $payment->id ?? null]) }}" class="btn-primary">
-                                    Lengkapi Pembayaran
-                                </a>
+                                @if(!empty($payment->payment_proof))
+                                    <a href="{{ route('user.payment_status', ['booking_id' => $booking->id]) }}" class="btn-secondary" onclick="event.stopPropagation()">
+                                        Lihat Bukti Pembayaran
+                                    </a>
+                                @else
+                                    <a href="{{ route('user.payment_detail', ['booking_id' => $booking->id, 'payment_id' => $payment->id ?? null]) }}" class="btn-primary" onclick="event.stopPropagation()">
+                                        Lengkapi Pembayaran
+                                    </a>
+                                @endif
                             @else
-                                <a href="{{ route('user.payment_status', ['booking_id' => $booking->id]) }}" class="btn-secondary">
+                                <a href="{{ route('user.trip_detail', ['booking_id' => $booking->id]) }}" class="btn-secondary" onclick="event.stopPropagation()">
                                     Lihat Status
                                 </a>
                             @endif
 
-                            @if($booking->trip_status === 'completed')
-                                <a href="{{ route('user.ulasan') }}" class="btn-primary" style="margin-left: 8px;">
+                            @if($booking->trip_status === 'completed' && $isVerified && !$alreadyReviewed)
+                                <a href="{{ route('user.ulasan', ['destination_id' => $booking->destination_id]) }}" class="btn-primary" style="margin-left: 8px;" onclick="event.stopPropagation()">
                                     Beri Ulasan
                                 </a>
                             @endif

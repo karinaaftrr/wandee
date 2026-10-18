@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/payment_detail', [UserController::class, 'paymentDetail'])->name('payment_detail');
         Route::post('/payment_upload', [UserController::class, 'paymentUpload'])->name('payment_upload');
         Route::get('/payment_status', [UserController::class, 'paymentStatus'])->name('payment_status');
+        Route::get('/trip_detail', [UserController::class, 'tripDetail'])->name('trip_detail');
 
         // Riwayat & Ulasan
         Route::get('/riwayat', [UserController::class, 'riwayat'])->name('riwayat');

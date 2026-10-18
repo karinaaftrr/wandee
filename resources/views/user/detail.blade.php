@@ -20,6 +20,12 @@
         </div>
     @endif
 
+    @if (session('review_message'))
+        <div style="background: rgba(57,255,120,0.12); border: 1px solid rgba(57,255,120,0.3); color: #39ff78; padding: 16px 24px; border-radius: 20px; margin-bottom: 24px; font-weight: 600; max-width: 1240px; margin-left: auto; margin-right: auto;">
+            {{ session('review_message') }}
+        </div>
+    @endif
+
     <section class="detail-grid-new">
 
         <!-- KIRI -->
@@ -194,7 +200,7 @@
         @if($reviews->isNotEmpty())
             <div class="reviews-list">
                 @foreach($reviews as $rev)
-                    @php $isOwnReview = $rev->user_id === auth()->id(); @endphp
+                    @php $isOwnReview = (int) $rev->user_id === (int) auth()->id(); @endphp
                     <article class="review-item {{ $isOwnReview ? 'is-own-review' : '' }}">
                         <div class="review-header">
                             <div class="review-user">
@@ -304,6 +310,10 @@
 
         if (openCommentsButton) {
             openCommentsButton.addEventListener('click', openReviewComments);
+        }
+
+        if (new URLSearchParams(window.location.search).get('buka_ulasan') === '1') {
+            openReviewComments();
         }
 
         // Dynamic quantity calculation

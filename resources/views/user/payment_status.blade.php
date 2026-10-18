@@ -7,10 +7,15 @@
 @include('partials.navbar')
 
 <main class="user-page-container">
-    <section class="section-header">
-        <h1>Status Pembayaran</h1>
-        <p>Periksa status pembayaran dan perjalanan Anda.</p>
-    </section>
+
+    <a href="{{ route('user.riwayat') }}" class="btn-secondary" style="display:inline-flex; align-items:center; gap:6px; margin-bottom:24px; font-size:14px;">
+        <i data-lucide="arrow-left"></i> Kembali ke Riwayat
+    </a>
+
+    <div style="margin-bottom: 24px;">
+        <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 6px;">Status Pembayaran</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">Periksa status pembayaran dan perjalanan Anda.</p>
+    </div>
 
     <section class="payment-status-card">
         <h2>{{ $destination->title }}</h2>
@@ -64,3 +69,4 @@
 
 @include('partials.footer')
 @endsection
+

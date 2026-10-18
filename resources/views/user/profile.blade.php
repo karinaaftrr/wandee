@@ -83,7 +83,7 @@
                 <a href="{{ route('user.favorite') }}">Favorit</a>
                 <a href="{{ route('user.riwayat') }}">Riwayat Perjalanan</a>
                 <a href="{{ route('user.ulasan') }}">Ulasan</a>
-                <a href="javascript:void(0)" data-logout-trigger>Keluar</a>
+                <a href="javascript:void(0)" class="profile-menu-logout" data-logout-trigger>Keluar</a>
             </div>
         </aside>
 
