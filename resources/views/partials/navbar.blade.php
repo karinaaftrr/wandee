@@ -90,15 +90,20 @@
                         <span class="mobile-user-email">{{ auth()->user()->email }}</span>
                     </div>
                 </div>
-                <form action="{{ route('logout') }}" method="POST" style="margin-top: 10px;">
-                    @csrf
-                    <button type="submit" class="mobile-logout-btn">
-                        <i data-lucide="log-out"></i>
-                        <span>Keluar</span>
-                    </button>
-                </form>
+
+                <button
+                    type="button"
+                    class="mobile-logout-btn logout-button"
+                    data-logout-link
+                    style="margin-top: 10px; color: #ff5b68;"
+                >
+                    <i data-lucide="log-out"></i>
+                    <span>Keluar</span>
+                </button>
             @else
-                <a href="{{ route('login') }}" class="btn-primary" style="width: 100%; text-align: center; justify-content: center; display: inline-flex;">Masuk / Daftar</a>
+                <a href="{{ route('login') }}" class="btn-primary" style="width: 100%; text-align: center; justify-content: center; display: inline-flex;">
+                    Masuk / Daftar
+                </a>
             @endauth
         </li>
     </ul>
@@ -131,3 +136,7 @@
 </nav>
 
 <div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
+
+@auth
+    @include('partials.logout_modal')
+@endauth

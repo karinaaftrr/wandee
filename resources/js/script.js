@@ -362,3 +362,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+    // TOGGLE PASSWORD VISIBILITY
+    document.querySelectorAll('.toggle-password').forEach((button) => {
+        button.addEventListener('click', () => {
+            const group = button.closest('.password-group');
+            const input = group?.querySelector('input');
+
+            if (!input) return;
+
+            const showPassword = input.type === 'password';
+            input.type = showPassword ? 'text' : 'password';
+
+            button.innerHTML = `<i data-lucide="${showPassword ? 'eye-off' : 'eye'}"></i>`;
+
+            button.setAttribute(
+                'aria-label',
+                showPassword ? 'Sembunyikan password' : 'Tampilkan password'
+            );
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    });

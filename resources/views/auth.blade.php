@@ -69,18 +69,25 @@
                         required>
                 </div>
 
-                <div class="form-group">
-                    <span class="form-icon">
-                        <i data-lucide="lock-keyhole"></i>
-                    </span>
-                    <input
-                        type="password"
-                        class="form-input"
-                        name="password"
-                        placeholder="Password"
-                        autocomplete="current-password"
-                        required>
-                </div>
+                
+        <div class="form-group password-group">
+            <span class="form-icon">
+                <i data-lucide="lock-keyhole"></i>
+            </span>
+
+            <input
+                type="password"
+                class="form-input"
+                name="password"
+                placeholder="Password"
+                autocomplete="current-password"
+                required>
+
+            <button type="button" class="toggle-password" aria-label="Tampilkan password">
+                <i data-lucide="eye"></i>
+            </button>
+        </div>
+
 
                 <p class="auth-forgot-link" style="text-align:right; margin-top:-5px; margin-bottom:15px; font-size:13px;">
                     <a href="#" id="showForgot" style="color:var(--accent, #38bdf8); text-decoration:none;">
@@ -141,7 +148,8 @@
                         required>
                 </div>
 
-                <div class="form-group">
+                
+                <div class="form-group password-group">
                     <input
                         type="password"
                         class="form-input"
@@ -150,7 +158,12 @@
                         autocomplete="new-password"
                         minlength="6"
                         required>
+
+                    <button type="button" class="toggle-password" aria-label="Tampilkan password">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
+
 
                 <button class="btn-submit" type="submit">Daftar</button>
             </form>
@@ -180,6 +193,7 @@
             <h1>Reset Password</h1>
             <p class="sub">Perbarui password akun Anda</p>
 
+            
             <form action="{{ route('password.reset') }}" method="POST">
                 @csrf
 
@@ -196,7 +210,7 @@
                         required>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group password-group">
                     <span class="form-icon">
                         <i data-lucide="lock-keyhole"></i>
                     </span>
@@ -208,9 +222,12 @@
                         autocomplete="new-password"
                         minlength="6"
                         required>
+                    <button type="button" class="toggle-password" aria-label="Tampilkan password">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group password-group">
                     <span class="form-icon">
                         <i data-lucide="lock-keyhole"></i>
                     </span>
@@ -222,10 +239,14 @@
                         autocomplete="new-password"
                         minlength="6"
                         required>
+                    <button type="button" class="toggle-password" aria-label="Tampilkan password">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
 
                 <button class="btn-submit" type="submit">Reset Password</button>
             </form>
+
         </div>
     </div>
 

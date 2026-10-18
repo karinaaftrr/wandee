@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Destination;
+use App\Support\TripDate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +39,9 @@ class ManageController extends Controller
         $itinerary = json_decode($data->itinerary ?? '', true);
         $itinerary = is_array($itinerary) ? $itinerary : [];
 
-        return view('admin.edit_destination', compact('user', 'data', 'itinerary'));
+        $tripDates = TripDate::parse($data->trip_date);
+
+        return view('admin.edit_destination', compact('user', 'data', 'itinerary', 'tripDates'));
     }
 
     public function update(Request $request, $id)
@@ -49,6 +52,11 @@ class ManageController extends Controller
 
         $data = $this->buildData($request, $validated);
         $data['rating'] = $this->parseRating($request->input('rating', $destination->rating));
+
+        // Kalau tanggal tidak diisi ulang, pertahankan tanggal yang sudah tersimpan
+        if (empty($validated['trip_start'])) {
+            $data['trip_date'] = $destination->trip_date;
+        }
 
         if ($request->hasFile('image')) {
             $this->deleteUploadedImage($destination->image);
@@ -89,7 +97,8 @@ class ManageController extends Controller
             'location'              => ['required', 'string', 'max:255'],
             'category'              => ['required', 'in:Gunung,Pantai,Air Terjun,Kota'],
             'price'                 => ['required', 'numeric', 'min:0'],
-            'trip_date'             => ['nullable', 'string', 'max:255'],
+            'trip_start'            => ['nullable', 'date', 'required_with:trip_end'],
+            'trip_end'              => ['nullable', 'date', 'after_or_equal:trip_start'],
             'quota'                 => ['required', 'integer', 'min:0'],
             'facilities'            => ['nullable', 'string'],
             'description'           => ['nullable', 'string'],
@@ -105,6 +114,10 @@ class ManageController extends Controller
             'image.mimes'    => 'Format gambar harus JPG, JPEG, atau PNG.',
             'image.max'      => 'Ukuran gambar maksimal 5 MB.',
             'price.numeric'  => 'Harga harus berupa angka, contoh: 1500000.',
+            'trip_start.date'            => 'Tanggal mulai trip tidak valid.',
+            'trip_start.required_with'   => 'Isi tanggal mulai trip terlebih dahulu.',
+            'trip_end.date'              => 'Tanggal selesai trip tidak valid.',
+            'trip_end.after_or_equal'    => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
         ]);
     }
 
@@ -115,7 +128,7 @@ class ManageController extends Controller
             'location'    => $validated['location'],
             'category'    => $validated['category'],
             'price'       => (string) (int) round((float) $validated['price']),
-            'trip_date'   => $validated['trip_date'] ?? null,
+            'trip_date'   => TripDate::format($validated['trip_start'] ?? null, $validated['trip_end'] ?? null),
             'quota'       => (int) $validated['quota'],
             'facilities'  => $validated['facilities'] ?? null,
             'description' => $validated['description'] ?? null,

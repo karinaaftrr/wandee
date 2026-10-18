@@ -13,6 +13,11 @@ use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Halaman informasi (bisa dibuka tanpa login)
+Route::view('/tentang-kami', 'pages.about')->name('about');
+Route::view('/kebijakan-privasi', 'pages.privacy')->name('privacy');
+Route::view('/syarat-ketentuan', 'pages.terms')->name('terms');
+
 // Auth routes (guest only for login/register pages)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

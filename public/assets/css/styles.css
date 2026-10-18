@@ -1118,8 +1118,10 @@ body.dashboard-page {
 }
 
 .manage-field textarea {
-  min-height: 150px;
-  line-height: 1.6;
+    min-height: 150px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    box-sizing: border-box;
 }
 
 .file-upload-input {
@@ -6033,4 +6035,19 @@ body.auth-page {
 .qty-select-wrapper input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: auto;
   margin: 0;
+}
+
+/* Input tanggal: background putih */
+input[type="date"] {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    color-scheme: light;
+    border: 1px solid #d1d5db;
+}
+
+/* Ikon kalender */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    cursor: pointer;
+    filter: none;
 }

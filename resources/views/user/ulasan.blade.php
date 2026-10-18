@@ -136,64 +136,82 @@
                 </button>
             </div>
 
-            <form action="{{ route('user.ulasan.submit') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="rating" id="ratingValue" value="0">
+            
+    <form action="{{ route('user.ulasan.submit') }}" method="POST" enctype="multipart/form-data">
+        @csrf
 
-                <div class="review-label-row">
-                    <label for="destination_id">Pilih perjalanan selesai</label>
-                </div>
+        <input type="hidden" name="rating" id="ratingValue" value="{{ old('rating', 0) }}">
+        <input type="hidden" name="booking_id" id="bookingId" value="{{ $selectedBooking->id ?? '' }}">
 
-                <select
-                    id="destination_id"
-                    name="destination_id"
-                    class="review-select"
-                    {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
-                    required>
-                    @if($eligibleBookings->isEmpty())
-                        <option value="">Belum ada destinasi yang bisa diulas</option>
-                    @else
-                        @foreach($eligibleBookings as $booking)
-                            <option value="{{ $booking->destination_id }}"
-                                {{ (isset($preSelectedDestinationId) && $booking->destination_id == $preSelectedDestinationId) ? 'selected' : '' }}>
-                                {{ $booking->destination->title }} - {{ $booking->destination->location }}
-                            </option>
-                        @endforeach
-                    @endif
-                </select>
+        <div class="review-label-row">
+            <label for="destination_id">Pilih perjalanan selesai</label>
+        </div>
 
-                <div class="review-label-row">
-                    <label for="reviewText">Tulis ulasan Anda</label>
-                    <span>Maksimal 500 karakter</span>
-                </div>
+        <select
+            id="destination_id"
+            name="destination_id"
+            class="review-select"
+            {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
+            required
+        >
+            @if($eligibleBookings->isEmpty())
+                <option value="">Belum ada destinasi yang bisa diulas</option>
+            @else
+                @foreach($eligibleBookings as $booking)
+                    <option
+                        value="{{ $booking->destination_id }}"
+                        data-booking-id="{{ $booking->id }}"
+                        {{ $selectedBooking && $booking->id == $selectedBooking->id ? 'selected' : '' }}
+                    >
+                        {{ $booking->destination->title }}
+                        - {{ $booking->destination->location }}
+                        (Pemesanan #{{ $booking->id }})
+                    </option>
+                @endforeach
+            @endif
+        </select>
 
-                <textarea
-                    id="reviewText"
-                    name="review"
-                    class="review-textarea"
-                    maxlength="500"
-                    placeholder="Bagikan detail tentang pemandu, akomodasi, pemandangan, dan lainnya..."
-                    {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
-                    required></textarea>
+        <div class="review-label-row">
+            <label for="reviewText">Tulis ulasan Anda</label>
+            <span>Maksimal 500 karakter</span>
+        </div>
 
-                <label class="review-upload">
-                    <input type="file" id="reviewPhoto" name="review_photo" accept="image/png,image/jpeg,image/jpg" {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}>
-                    <span>
-                        <i data-lucide="upload-cloud"></i>
-                    </span>
-                    <strong>Klik untuk unggah atau seret foto ke sini</strong>
-                    <div id="selectedFileName" style="margin-top:8px;font-size:13px;color:#4ade80;"></div>
-                    <small>PNG, JPG (Maks. 5MB)</small>
-                </label>
+        <textarea
+            id="reviewText"
+            name="review"
+            class="review-textarea"
+            maxlength="500"
+            placeholder="Bagikan detail tentang pemandu, akomodasi, pemandangan, dan lainnya..."
+            {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
+            required
+        >{{ old('review') }}</textarea>
 
-                <button
-                    type="submit"
-                    class="btn-primary review-submit"
-                    {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}>
-                    {{ $eligibleBookings->isEmpty() ? 'Belum Bisa Mengulas' : 'Kirim Ulasan' }}
-                    <i data-lucide="send"></i>
-                </button>
-            </form>
+        <label class="review-upload">
+            <input
+                type="file"
+                id="reviewPhoto"
+                name="review_photo"
+                accept="image/png,image/jpeg,image/jpg"
+                {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
+            >
+            <span>
+                <i data-lucide="upload-cloud"></i>
+            </span>
+            <strong>Klik untuk unggah atau seret foto ke sini</strong>
+            <div id="selectedFileName" style="margin-top:8px;font-size:13px;color:#4ade80;"></div>
+            <small>PNG, JPG (Maks. 5MB)</small>
+        </label>
+
+        <button
+            type="submit"
+            class="btn-primary review-submit"
+            {{ $eligibleBookings->isEmpty() ? 'disabled' : '' }}
+        >
+            {{ $eligibleBookings->isEmpty() ? 'Belum Bisa Mengulas' : 'Kirim Ulasan' }}
+            <i data-lucide="send"></i>
+        </button>
+    </form>
+
 
         </section>
 
@@ -203,53 +221,113 @@
 
 @include('partials.footer')
 
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        // =========================
+        // RATING BINTANG
+        // =========================
         const ratingInput = document.getElementById('ratingValue');
         const ratingButtons = document.querySelectorAll('.rating-stars button');
-        
+
+        function updateRating(rating) {
+            if (!ratingInput) return;
+
+            ratingInput.value = rating;
+
+            ratingButtons.forEach((button) => {
+                button.classList.toggle(
+                    'active',
+                    Number(button.dataset.rating) <= rating
+                );
+            });
+        }
+
         ratingButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                const rating = Number(button.dataset.rating);
-                ratingInput.value = rating;
-                ratingButtons.forEach((item) => {
-                    item.classList.toggle('active', Number(item.dataset.rating) <= rating);
-                });
+            button.addEventListener('click', function () {
+                updateRating(Number(this.dataset.rating));
             });
         });
 
+        // Pertahankan rating jika form dikirim kembali karena validasi gagal
+        if (ratingInput && Number(ratingInput.value) > 0) {
+            updateRating(Number(ratingInput.value));
+        }
+
+        // =========================
+        // SINKRONISASI BOOKING ID
+        // =========================
+        const destinationSelect = document.getElementById('destination_id');
+        const bookingIdInput = document.getElementById('bookingId');
+
+        function syncSelectedBooking() {
+            if (!destinationSelect || !bookingIdInput) return;
+
+            const selectedOption = destinationSelect.selectedOptions[0];
+
+            bookingIdInput.value = selectedOption
+                ? (selectedOption.dataset.bookingId || '')
+                : '';
+        }
+
+        if (destinationSelect && bookingIdInput) {
+            destinationSelect.addEventListener(
+                'change',
+                syncSelectedBooking
+            );
+
+            syncSelectedBooking();
+        }
+
+        // =========================
+        // UPLOAD FOTO ULASAN
+        // =========================
         const reviewPhotoInput = document.getElementById('reviewPhoto');
         const selectedFileName = document.getElementById('selectedFileName');
 
         if (reviewPhotoInput && selectedFileName) {
-            reviewPhotoInput.addEventListener('change', function() {
-                if (this.files.length > 0) {
-                    selectedFileName.textContent = 'File dipilih: ' + this.files[0].name;
+            reviewPhotoInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    selectedFileName.textContent =
+                        'File dipilih: ' + this.files[0].name;
                 } else {
                     selectedFileName.textContent = '';
                 }
             });
         }
 
+        // =========================
+        // IKON LUCIDE
+        // =========================
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
 
-        // Toast auto-show & auto-dismiss
+        // =========================
+        // TOAST NOTIFICATION
+        // =========================
         const toast = document.getElementById('reviewToast');
+
         if (toast) {
-            // Slide in
             requestAnimationFrame(() => {
                 toast.style.opacity = '1';
-                toast.style.transform = 'translateX(-50%) translateY(0)';
+                toast.style.transform =
+                    'translateX(-50%) translateY(0)';
             });
-            // Auto-dismiss after 4.5s
+
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateX(-50%) translateY(-20px)';
-                setTimeout(() => toast.remove(), 400);
+                toast.style.transform =
+                    'translateX(-50%) translateY(-20px)';
+
+                setTimeout(() => {
+                    if (toast.isConnected) {
+                        toast.remove();
+                    }
+                }, 400);
             }, 4500);
         }
     });
 </script>
 @endsection
+

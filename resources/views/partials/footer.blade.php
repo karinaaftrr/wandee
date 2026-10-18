@@ -24,9 +24,9 @@
             <div class="footer-col">
                 <h4>Info</h4>
                 <ul>
-                    <li><a href="#">Tentang Kami</a></li>
-                    <li><a href="#">Kebijakan Privasi</a></li>
-                    <li><a href="#">Syarat & Ketentuan</a></li>
+                    <li><a href="{{ route('about') }}">Tentang Kami</a></li>
+                    <li><a href="{{ route('privacy') }}">Kebijakan Privasi</a></li>
+                    <li><a href="{{ route('terms') }}">Syarat &amp; Ketentuan</a></li>
                 </ul>
             </div>
         </div>

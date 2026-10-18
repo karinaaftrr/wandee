@@ -6692,3 +6692,114 @@ body.auth-page {
   -webkit-appearance: auto;
   margin: 0;
 }
+
+
+/* Dropdown tema gelap Wandee */
+select,
+select:focus {
+    color: #e8f0eb;
+    background-color: #111a15;
+}
+
+select option,
+select optgroup {
+    color: #e8f0eb;
+    background-color: #111a15;
+}
+
+
+.logout-button,
+.mobile-logout-btn,
+button.logout-btn {
+    color: #ff5b68 !important;
+    border-color: rgba(255, 91, 104, 0.28);
+}
+
+.logout-button:hover,
+.mobile-logout-btn:hover,
+button.logout-btn:hover {
+    color: #ff707b !important;
+    background-color: rgba(255, 91, 104, 0.12);
+}
+
+
+.password-group {
+    position: relative;
+}
+
+.password-group .form-input {
+    padding-right: 48px;
+}
+
+.password-group .toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    z-index: 2;
+}
+
+.password-group .toggle-password:hover {
+    color: #39ff78;
+}
+
+.password-group .toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Toggle password */
+.password-group {
+    position: relative;
+}
+
+.password-group .form-input {
+    padding-right: 48px;
+}
+
+.password-group .toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    z-index: 2;
+}
+
+.password-group .toggle-password:hover {
+    color: #39ff78;
+}
+
+.password-group .toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* Jarak teks deskripsi */
+.manage-field textarea {
+    padding: 14px 16px;
+    box-sizing: border-box;
+}
+
+/* Ikon kalender putih */
+.manage-field input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 1;
+    cursor: pointer;
+}

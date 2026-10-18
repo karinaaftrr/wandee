@@ -149,7 +149,7 @@ class UserController extends Controller
         $payment_id = $request->query('payment_id');
 
         $booking = Booking::with('destination')->where('id', $booking_id)->where('user_id', Auth::id())->firstOrFail();
-        
+
         $payment = $payment_id
             ? Payment::where('id', $payment_id)->where('booking_id', $booking->id)->firstOrFail()
             : Payment::where('booking_id', $booking->id)->latest()->firstOrFail();
@@ -253,20 +253,28 @@ class UserController extends Controller
     /**
      * Riwayat Perjalanan
      */
+
     public function riwayat()
     {
+        $userId = Auth::id();
+
         $bookings = Booking::with(['destination', 'payment'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->orderByDesc('id')
             ->get();
 
-        $reviewedDestinationIds = Review::where('user_id', Auth::id())
-            ->pluck('destination_id')
-            ->map(fn($id) => (int) $id)
+        $reviewedBookingIds = Review::where('user_id', $userId)
+            ->whereNotNull('booking_id')
+            ->pluck('booking_id')
+            ->map(fn ($id) => (int) $id)
             ->toArray();
 
-        return view('user.riwayat', compact('bookings', 'reviewedDestinationIds'));
+        return view('user.riwayat', compact(
+            'bookings',
+            'reviewedBookingIds'
+        ));
     }
+
 
     /**
      * Daftar Favorit
@@ -319,54 +327,81 @@ class UserController extends Controller
     /**
      * Halaman Ulasan
      */
+
     public function ulasan(Request $request)
     {
         $userId = Auth::id();
 
-        // Ambil trip yang sudah selesai dan pembayarannya terverifikasi
         $completedBookings = Booking::with(['destination', 'payment'])
             ->where('user_id', $userId)
             ->where('trip_status', 'completed')
-            ->whereHas('payment', fn($q) => $q->where('payment_status', 'verified'))
+            ->whereHas('payment', function ($query) {
+                $query->where('payment_status', 'verified');
+            })
             ->get();
 
-        $reviewedDestinationIds = Review::where('user_id', $userId)
-            ->pluck('destination_id')
+        $reviewedBookingIds = Review::where('user_id', $userId)
+            ->whereNotNull('booking_id')
+            ->pluck('booking_id')
+            ->map(fn ($id) => (int) $id)
             ->toArray();
 
-        $eligibleBookings = $completedBookings->filter(function ($booking) use ($reviewedDestinationIds) {
-            $payment = $booking->payment;
-            $isVerified = $payment && $payment->payment_status === 'verified';
-            return $isVerified && !in_array($booking->destination_id, $reviewedDestinationIds);
-        })->values();
+        $eligibleBookings = $completedBookings
+            ->filter(function ($booking) use ($reviewedBookingIds) {
+                return !in_array(
+                    (int) $booking->id,
+                    $reviewedBookingIds,
+                    true
+                );
+            })
+            ->values();
 
-        // Pre-select dari query param (dari riwayat)
+        $preSelectedBookingId = $request->query('booking_id');
         $preSelectedDestinationId = $request->query('destination_id');
+
         $selectedBooking = null;
 
-        if ($preSelectedDestinationId) {
-            $selectedBooking = $eligibleBookings->firstWhere('destination_id', $preSelectedDestinationId);
+        if ($preSelectedBookingId) {
+            $selectedBooking = $eligibleBookings->firstWhere(
+                'id',
+                (int) $preSelectedBookingId
+            );
+        }
+
+        if (!$selectedBooking && $preSelectedDestinationId) {
+            $selectedBooking = $eligibleBookings->firstWhere(
+                'destination_id',
+                (int) $preSelectedDestinationId
+            );
         }
 
         if (!$selectedBooking) {
             $selectedBooking = $eligibleBookings->first();
         }
 
-        // Ulasan yang sudah pernah ditulis oleh user
         $myReviews = Review::with('destination')
             ->where('user_id', $userId)
             ->orderByDesc('created_at')
             ->get();
 
-        return view('user.ulasan', compact('eligibleBookings', 'selectedBooking', 'myReviews', 'preSelectedDestinationId'));
+        return view('user.ulasan', compact(
+            'eligibleBookings',
+            'selectedBooking',
+            'myReviews',
+            'preSelectedDestinationId',
+            'preSelectedBookingId'
+        ));
     }
+
 
     /**
      * Kirim Ulasan
      */
+
     public function submitReview(Request $request)
     {
         $request->validate([
+            'booking_id' => 'required|integer|exists:bookings,id',
             'destination_id' => 'required|exists:destinations,id',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'required|string|max:500',
@@ -379,31 +414,58 @@ class UserController extends Controller
         ]);
 
         $userId = Auth::id();
-        $destinationId = $request->destination_id;
+        $bookingId = (int) $request->booking_id;
+        $destinationId = (int) $request->destination_id;
 
-        // Cek eligibility: trip harus selesai dan pembayaran terverifikasi
-        $eligible = Booking::where('user_id', $userId)
+        $eligibleBooking = Booking::where('id', $bookingId)
+            ->where('user_id', $userId)
             ->where('destination_id', $destinationId)
             ->where('trip_status', 'completed')
-            ->whereHas('payment', fn($q) => $q->where('payment_status', 'verified'))
-            ->exists();
+            ->whereHas('payment', function ($query) {
+                $query->where('payment_status', 'verified');
+            })
+            ->first();
 
-        if (!$eligible) {
-            return back()->with('review_error', 'Ulasan hanya bisa diberikan setelah perjalanan selesai dan pembayaran terverifikasi.');
+        if (!$eligibleBooking) {
+            return back()
+                ->with(
+                    'review_error',
+                    'Ulasan hanya bisa diberikan untuk pemesanan yang selesai dan pembayarannya terverifikasi.'
+                )
+                ->withInput();
         }
 
-        if (Review::where('user_id', $userId)->where('destination_id', $destinationId)->exists()) {
-            return back()->with('review_error', 'Anda sudah pernah memberikan ulasan untuk destinasi ini.');
+        $alreadyReviewed = Review::where('user_id', $userId)
+            ->where('booking_id', $bookingId)
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return back()
+                ->with(
+                    'review_error',
+                    'Anda sudah memberikan ulasan untuk pemesanan ini.'
+                )
+                ->withInput();
         }
 
         $reviewImage = null;
+
         if ($request->hasFile('review_photo')) {
             $file = $request->file('review_photo');
-            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9_\.\-]/', '_', $file->getClientOriginalName());
+
+            $filename = time() . '_' .
+                preg_replace(
+                    '/[^A-Za-z0-9_\.\-]/',
+                    '_',
+                    $file->getClientOriginalName()
+                );
+
             $destinationPath = public_path('uploads/reviews');
+
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
+
             $file->move($destinationPath, $filename);
             $reviewImage = $filename;
         }
@@ -411,14 +473,16 @@ class UserController extends Controller
         Review::create([
             'user_id' => $userId,
             'destination_id' => $destinationId,
+            'booking_id' => $bookingId,
             'rating' => $request->rating,
             'review' => $request->review,
             'review_image' => $reviewImage,
             'created_at' => now(),
         ]);
 
-        // Update rata-rata rating destinasi
-        $avgRating = Review::where('destination_id', $destinationId)->avg('rating');
+        $avgRating = Review::where('destination_id', $destinationId)
+            ->avg('rating');
+
         if ($avgRating !== null) {
             Destination::where('id', $destinationId)->update([
                 'rating' => round($avgRating, 1),
@@ -426,9 +490,16 @@ class UserController extends Controller
         }
 
         return redirect()
-            ->route('user.detail', ['id' => $destinationId, 'buka_ulasan' => 1])
-            ->with('review_message', 'Ulasan berhasil dikirim. Terima kasih sudah berbagi pengalaman!');
+            ->route('user.detail', [
+                'id' => $destinationId,
+                'buka_ulasan' => 1,
+            ])
+            ->with(
+                'review_message',
+                'Ulasan berhasil dikirim. Terima kasih sudah berbagi pengalaman!'
+            );
     }
+
 
     /**
      * Profil Pengguna

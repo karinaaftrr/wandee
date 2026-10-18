@@ -1,3 +1,4 @@
+@once
 <div class="logout-modal" id="logoutModal" aria-hidden="true">
     <div class="logout-modal-backdrop" data-logout-cancel></div>
 
@@ -14,3 +15,4 @@
         </div>
     </div>
 </div>
+@endonce

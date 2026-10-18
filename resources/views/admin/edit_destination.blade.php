@@ -52,8 +52,20 @@
             </div>
 
             <div class="manage-field">
-                <label for="trip_date">Tanggal Trip</label>
-                <input type="text" id="trip_date" name="trip_date" value="{{ old('trip_date', $data->trip_date) }}" placeholder="Contoh: 12-14 Juni 2026">
+                <label for="trip_start">Tanggal Mulai Trip</label>
+                <input type="date" id="trip_start" name="trip_start" value="{{ old('trip_start', $tripDates['start']) }}"
+                       onchange="document.getElementById('trip_end').min = this.value;">
+                @if ($data->trip_date)
+                    <small style="color:rgba(232,240,235,.5);">
+                        Tersimpan saat ini: {{ $data->trip_date }}@if (!$tripDates['start']) (tidak terbaca otomatis, pilih ulang tanggalnya)@endif
+                    </small>
+                @endif
+            </div>
+
+            <div class="manage-field">
+                <label for="trip_end">Tanggal Selesai Trip</label>
+                <input type="date" id="trip_end" name="trip_end" value="{{ old('trip_end', $tripDates['end']) }}" min="{{ old('trip_start', $tripDates['start']) }}">
+                <small style="color:rgba(232,240,235,.5);">Kosongkan jika trip hanya satu hari.</small>
             </div>
 
             <div class="manage-field">
