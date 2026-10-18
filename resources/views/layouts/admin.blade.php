@@ -28,6 +28,7 @@
 </div>
 
 @include('partials.logout_modal')
+@include('partials.confirm_modal')
 
 @stack('scripts')
 </body>

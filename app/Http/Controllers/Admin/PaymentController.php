@@ -53,6 +53,13 @@ class PaymentController extends Controller
             $payment = DB::table('payments')->where('id', $paymentId)->first();
 
             if ($payment) {
+                // Pembayaran tidak bisa diverifikasi kalau bukti belum diunggah
+                if ($status === 'verified' && empty($payment->payment_proof)) {
+                    return redirect()
+                        ->route('admin.manage_payments')
+                        ->with('payment_error', 'Pembayaran belum bisa diverifikasi karena pengguna belum mengunggah bukti pembayaran.');
+                }
+
                 $booking = DB::table('bookings')->where('id', $payment->booking_id)->first();
 
                 if ($booking && ($booking->trip_status ?? '') === 'cancelled') {

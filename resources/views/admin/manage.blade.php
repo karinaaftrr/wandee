@@ -147,7 +147,8 @@
                                         Edit
                                     </a>
                                     <form action="{{ route('admin.delete_destination', $dest->id) }}" method="POST"
-                                          onsubmit="return confirm('Yakin ingin menghapus destinasi ini?')">
+                                          data-confirm-title="Hapus destinasi?"
+                                          data-confirm="Yakin ingin menghapus destinasi ini? Tindakan ini tidak bisa dibatalkan.">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
