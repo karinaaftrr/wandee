@@ -62,6 +62,7 @@ Route::middleware(['auth', 'admin'])
 
         // Manage destinations
         Route::get('/manage', [AdminManageController::class, 'index'])->name('manage');
+        Route::post('/store-destination', [AdminManageController::class, 'store'])->name('store_destination');
         Route::get('/edit-destination/{id}', [AdminManageController::class, 'edit'])->name('edit_destination');
         Route::put('/update-destination/{id}', [AdminManageController::class, 'update'])->name('update_destination');
         Route::delete('/delete-destination/{id}', [AdminManageController::class, 'destroy'])->name('delete_destination');
