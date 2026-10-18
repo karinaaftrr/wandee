@@ -44,6 +44,11 @@ class PaymentController extends Controller
 
         $validStatuses = ['verified', 'rejected'];
 
+        if ($status === 'rejected' && $rejectionReason === '') {
+            return redirect()->route('admin.manage_payments')
+                ->with('error', 'Alasan penolakan wajib diisi.');
+        }
+
         if ($paymentId && in_array($status, $validStatuses, true)) {
             $payment = DB::table('payments')->where('id', $paymentId)->first();
 

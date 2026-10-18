@@ -115,6 +115,47 @@
     body.proof-open {
         overflow: hidden;
     }
+
+    /* Popup alasan penolakan pembayaran */
+    .reject-dialog {
+        width: min(480px, 100%);
+    }
+
+    .reject-dialog textarea {
+        width: 100%;
+        min-height: 120px;
+        margin-top: 16px;
+        padding: 12px 14px;
+        box-sizing: border-box;
+        resize: vertical;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, .12);
+        background: rgba(255, 255, 255, .04);
+        color: #fff;
+        font-size: .92rem;
+        outline: none;
+    }
+
+    .reject-dialog textarea:focus {
+        border-color: rgba(255, 79, 129, .5);
+    }
+
+    .reject-error {
+        display: none;
+        margin-top: 8px;
+        color: #ff4f81;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    .reject-error.show {
+        display: block;
+    }
+
+    .reject-dialog .logout-confirm.is-danger {
+        background: #ff4f81;
+        color: #fff;
+    }
 </style>
 @endpush
 
@@ -128,9 +169,9 @@
         </div>
     </div>
 
-    @if (session('payment_error'))
+    @if (session('payment_error') || session('error'))
         <div style="background:rgba(255,79,129,.10);border:1px solid rgba(255,79,129,.35);color:#ff4f81;padding:14px 18px;border-radius:14px;margin-bottom:20px;font-size:.92rem;">
-            {{ session('payment_error') }}
+            {{ session('payment_error') ?? session('error') }}
         </div>
     @endif
 
@@ -216,12 +257,10 @@
                                                     title="Belum ada bukti pembayaran"
                                                     style="padding:6px 14px;font-size:.75rem;opacity:.4;cursor:not-allowed;">Verifikasi</button>
                                         @endif
-                                        <form action="{{ route('admin.payment_update') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="payment_id" value="{{ $payment->id }}">
-                                            <input type="hidden" name="status" value="rejected">
-                                            <button type="submit" class="btn-ghost" style="padding:6px 14px;font-size:.75rem;border-color:rgba(255,79,129,.4);color:#ff4f81;">Tolak</button>
-                                        </form>
+                                        <button type="button" class="btn-ghost js-reject-btn"
+                                            data-payment-id="{{ $payment->id }}"
+                                            data-payer="{{ $payment->user_name ?? 'Guest' }}"
+                                            style="padding:6px 14px;font-size:.75rem;border-color:rgba(255,79,129,.4);color:#ff4f81;">Tolak</button>
                                     </div>
                                 @elseif ($ps === 'verified' && ($payment->trip_status ?? '') === 'ongoing')
                                     <form action="{{ route('admin.trip_complete') }}" method="POST">
@@ -259,6 +298,24 @@
                 <button type="button" class="btn-ghost" data-proof-close style="padding:8px 18px;font-size:.82rem;">Tutup</button>
             </div>
         </div>
+    </div>
+
+    {{-- Popup alasan penolakan --}}
+    <div class="logout-modal" id="rejectModal" aria-hidden="true">
+        <div class="logout-modal-backdrop" data-reject-cancel></div>
+        <form class="logout-dialog reject-dialog" id="rejectForm" action="{{ route('admin.payment_update') }}" method="POST" role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
+            @csrf
+            <input type="hidden" name="payment_id" id="rejectPaymentId">
+            <input type="hidden" name="status" value="rejected">
+            <h3 id="rejectTitle">Tolak pembayaran</h3>
+            <p id="rejectDesc">Tulis alasan penolakan agar pemesan tahu apa yang perlu diperbaiki.</p>
+            <textarea name="rejection_reason" id="rejectReason" maxlength="500" placeholder="Contoh: Bukti transfer tidak jelas / nominal tidak sesuai"></textarea>
+            <div class="reject-error" id="rejectError">Alasan penolakan wajib diisi.</div>
+            <div class="logout-actions">
+                <button type="button" class="logout-cancel" data-reject-cancel>Batal</button>
+                <button type="submit" class="logout-confirm is-danger">Konfirmasi Tolak</button>
+            </div>
+        </form>
     </div>
 
 @endsection
@@ -306,5 +363,53 @@
             }
         });
     });
+</script>
+
+<script>
+    (function () {
+        var modal = document.getElementById('rejectModal');
+        var form = document.getElementById('rejectForm');
+        var reason = document.getElementById('rejectReason');
+        var error = document.getElementById('rejectError');
+        if (!modal) return;
+
+        function openReject(id, payer) {
+            document.getElementById('rejectPaymentId').value = id;
+            document.getElementById('rejectDesc').textContent =
+                'Tulis alasan menolak pembayaran dari ' + payer + '. Pesanan akan ditolak setelah kamu konfirmasi.';
+            reason.value = '';
+            error.classList.remove('show');
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            setTimeout(function () { reason.focus(); }, 50);
+        }
+
+        function closeReject() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        document.querySelectorAll('.js-reject-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openReject(btn.dataset.paymentId, btn.dataset.payer);
+            });
+        });
+
+        modal.querySelectorAll('[data-reject-cancel]').forEach(function (el) {
+            el.addEventListener('click', closeReject);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeReject();
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (!reason.value.trim()) {
+                e.preventDefault();
+                error.classList.add('show');
+                reason.focus();
+            }
+        });
+    })();
 </script>
 @endpush
